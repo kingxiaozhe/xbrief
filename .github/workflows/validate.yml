@@ -1,0 +1,31 @@
+name: Validate XBrief
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync --all-groups
+      - name: Lint
+        run: uv run ruff check src tests
+      - name: Test
+        run: uv run pytest
+      - name: Validate XBrief Skill package
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          skill = Path("skills/xbrief/SKILL.md").read_text(encoding="utf-8")
+          assert skill.startswith("---\n")
+          assert "name: xbrief" in skill
+          assert "description:" in skill
+          print("XBrief Skill contract is present.")
+          PY

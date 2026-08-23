@@ -1,0 +1,23 @@
+interface:
+  display_name: XBrief
+  short_description: Archive one X discussion and produce an evidence-bounded analysis.
+  default_prompt: Use $xbrief to archive and analyze this X status URL in my configured Obsidian Vault.
+
+compatibility:
+  canonical_format: agent-skills
+  adapter_targets:
+    - openai
+    - generic
+  activation:
+    mode: manual
+    paths: []
+  execution:
+    context: inline
+    shell: bash
+  trust:
+    source_tier: local
+    remote_inline_execution: forbid
+    remote_metadata_policy: allow-metadata-only
+  degradation:
+    openai: Preserve the capture and report unavailable local dependencies before analysis.
+    generic: Use SKILL.md with the local xbrief CLI; do not emulate unavailable capture results.

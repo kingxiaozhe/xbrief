@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nuwa Business Panel"
+  short_description: "用费曼、Paul Graham 和芒格方法审查内容与商业计划"
+  default_prompt: "Use $nuwa-business-panel to audit this summary and business plan with evidence-first Feynman, Paul Graham, and Munger method passes, without roleplay."

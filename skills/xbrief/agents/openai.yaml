@@ -1,0 +1,4 @@
+interface:
+  display_name: "XBrief"
+  short_description: "抓取 X 帖子与评论，经三层专家方法审查后保存到 Obsidian"
+  default_prompt: "Use $xbrief to fetch this X post and its visible replies, explain the core point in plain Chinese, quote and analyze the most important comments, run $nuwa-business-panel to audit the summary and business plan, give me an evidence-graded execution plan, and save everything to Obsidian."

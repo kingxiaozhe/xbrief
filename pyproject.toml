@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xbrief"
+version = "0.1.0"
+description = "Fetch X posts and visible replies, analyze them in Codex, and archive everything to Obsidian."
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.10,<3",
+  "typer>=0.16,<1",
+]
+
+[project.scripts]
+xbrief = "xbrief.cli:app"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xbrief"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

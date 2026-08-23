@@ -1,0 +1,34 @@
+{
+  "positive_concepts": {
+    "x_status": {
+      "phrases": ["x status", "twitter status", "x 帖子", "x.com", "twitter"],
+      "weight": 0.4
+    },
+    "archive": {
+      "phrases": ["archive", "save to obsidian", "存档", "保存到 obsidian", "保存到 Obsidian"],
+      "weight": 0.3
+    },
+    "replies": {
+      "phrases": ["replies", "comments", "回复", "评论", "讨论"],
+      "weight": 0.3
+    }
+  },
+  "negative_concepts": {
+    "translation": {
+      "phrases": ["translate", "翻译"],
+      "weight": 0.55,
+      "exclusive": true
+    },
+    "writing": {
+      "phrases": ["写一篇", "观点文章"],
+      "weight": 0.55,
+      "exclusive": true
+    },
+    "ui": {
+      "phrases": ["登录页面", "ui", "界面"],
+      "weight": 0.55,
+      "exclusive": true
+    }
+  },
+  "fallback_positive_concepts": ["x_status", "archive", "replies"]
+}

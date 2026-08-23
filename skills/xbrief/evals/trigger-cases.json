@@ -1,0 +1,40 @@
+{
+  "should_trigger": [
+    {
+      "text": "用 $xbrief 抓取这个 X 帖子和评论，保存到 Obsidian 后分析。",
+      "family": "explicit-command"
+    },
+    {
+      "text": "把 https://x.com/alice/status/123456789 的讨论存档，并总结评论中的分歧。",
+      "family": "discussion-archive"
+    },
+    {
+      "text": "分析这条 Twitter status 的可见回复，看看有没有值得验证的产品机会。",
+      "family": "opportunity-analysis"
+    }
+  ],
+  "should_not_trigger": [
+    {
+      "text": "把这段中文翻译成英文。",
+      "family": "translation"
+    },
+    {
+      "text": "给我写一篇关于社交媒体的观点文章。",
+      "family": "writing"
+    },
+    {
+      "text": "设计一个 X 平台的登录页面。",
+      "family": "ui"
+    }
+  ],
+  "near_neighbor": [
+    {
+      "text": "总结我贴在这里的一条微博正文。",
+      "family": "non-x-social"
+    },
+    {
+      "text": "查看这个 X 用户的全部历史推文。",
+      "family": "profile-scan"
+    }
+  ]
+}
