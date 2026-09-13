@@ -28,6 +28,7 @@ def write_obsidian_bundle(
     data_folder.mkdir(parents=True, exist_ok=True)
 
     post_path = data_folder / "post.json"
+    article_path = data_folder / "article.json"
     replies_path = data_folder / "replies.jsonl"
     meta_path = data_folder / "fetch-meta.json"
     compact_path = data_folder / "compact-context.json"
@@ -45,6 +46,10 @@ def write_obsidian_bundle(
     preserve_analysis = previous_input_hash == analysis_input_hash
 
     _atomic_write(post_path, post.model_dump_json(indent=2) + "\n")
+    if post.article is not None:
+        _atomic_write(article_path, post.article.model_dump_json(indent=2) + "\n")
+    elif article_path.exists():
+        article_path.unlink()
     _atomic_write(
         replies_path,
         "".join(reply.model_dump_json() + "\n" for reply in replies),
@@ -81,6 +86,7 @@ def write_obsidian_bundle(
 
     return {
         "post": post_path,
+        "article": article_path,
         "replies": replies_path,
         "fetch_meta": meta_path,
         "compact_context": compact_path,
@@ -165,6 +171,16 @@ def _render_index(
             + post.quoted_text.replace("\n", "\n> ")
             + "\n"
         )
+    article_section = ""
+    article_data_link = ""
+    if post.article is not None:
+        article_body = post.article.plain_text.replace("\n", "\n> ")
+        article_section = (
+            "\n## X Article\n\n"
+            f"### [{post.article.title}]({post.article.source_url})\n\n"
+            f"> {article_body}\n"
+        )
+        article_data_link = "\n- [[_data/article.json|X Article JSON]]"
     analysis = preserved_analysis or "_等待当前 Codex 根据 compact context 生成分析。_"
     return f'''---
 type: "x-discussion"
@@ -192,6 +208,7 @@ tags:
 
 > {post.text.replace(chr(10), chr(10) + "> ")}
 {quoted_post}
+{article_section}
 ## 抓取覆盖
 
 - 状态：`{status}`
@@ -218,7 +235,7 @@ tags:
 
 ## 原始数据
 
-- [[_data/post.json|原帖 JSON]]
+- [[_data/post.json|原帖 JSON]]{article_data_link}
 - [[_data/replies.jsonl|完整评论 JSONL]]
 - [[_data/fetch-meta.json|抓取元数据]]
 - [[_data/compact-context.json|分析上下文]]
@@ -239,22 +256,30 @@ def _render_analysis_prompt(
         f"读取 `{compact_path}`，分析 X 帖子 `{post.id}` 的已抓取评论样本。",
         "",
         "必须：",
+        "按用户请求决定分析深度；保存本身不要求商业分析。",
+        "仅摘要时保留兼容标题，专家、商业和计划部分标为不适用（本次仅摘要）。",
         "",
         "1. 第一部分必须是“## 一句话说清楚”和“## 大白话核心点”。",
         "   先讲清作者真正想表达什么、哪些是可操作方法、哪些只是作者自述；",
+        "   如果 compact context 包含 X Article，X Article 正文属于作者来源文本，",
+        "   必须与评论、外部核验事实和模型推断分开；",
         "   不要复述成长文摘要。",
         "2. 第二部分必须是“## 最核心评论（原文 + 解读）”。",
-        "   选择 3–6 条真正改变判断或暴露需求的评论，逐字引用 compact context 原文；",
+        "   选择 0–6 条真正改变判断或暴露需求的评论，逐字引用 compact context 原文；",
+        "   评论不足时只引用实际可用内容；没有实质评论时说明缺口，不凑数。",
         "   给出作者、来源链接、为什么核心，以及它与原帖是支持、质疑还是补充。",
         "   引号内不得改写。",
         "3. 第三部分必须是“## 综合判断”。",
         "   区分评论区共识、少数观点、事实性主张、情绪表达和无法核验的内容；",
         "   只有立场覆盖或计数足够时才能称为共识，否则写成“入选评论中的重复主题”。",
         "4. 第四部分必须是“## 专家方法审查”。",
-        "   必须运行 $nuwa-business-panel；它会依次检查大白话与现实证据、",
+        "   商业机会、重大时间/金钱投入决策、执行计划或明确方法审查请求，",
+        "   才要求运行 $nuwa-business-panel；它会依次检查大白话与现实证据、",
         "   真实需求与最小人工验证、失败路径、激励、偏差和反面证据；",
         "   标注为方法推断，不得覆盖原始证据等级。",
-        "   如果该 Skill 无法加载，保留已抓取归档并停止分析，不能输出完整或部分面板结论。",
+        "   如果所需 Skill 无法加载，保留归档、暂停依赖它的结论，标为未完成方法审查；",
+        "   可返回独立有据的摘要，不得冒称面板已运行或完整分析已完成。",
+        "   面板未运行时不能输出完整或部分面板结论。",
         "5. 第五部分必须是“## 赚钱机会与产品启发”。每张机会卡至少包含：",
         "   痛点、目标用户、使用场景、现有替代、付费/损失信号、支持证据、",
         "   反对证据、事实/观点/推断标签、证据等级、未知项和最小验证实验。",
@@ -266,13 +291,15 @@ def _render_analysis_prompt(
         "   或面向供应方的价格询问/购买意图；普通提问或索取免费建议不算 E3；",
         "   E4=跨平台或跨时间重复；E5=访谈、预售、付费试点或真实收入验证。",
         "   不得把互动量当作付费意愿。",
-        "7. 第六部分必须是“## 最值得先验证的方向”，只选一个方向。",
-        "   给出为什么、首个可售卖形态、目标客户、价格假设和 7 天内验证动作；",
+        "7. 第六部分必须是“## 最值得先验证的方向”；有证据支持时最多选一个方向。",
+        "   商业分析时给出为什么、首个可售卖形态、目标客户、价格假设和验证动作；",
         "   价格必须标为待验证假设。",
-        "8. 紧接着输出“## 如果建议你落地：执行方案”。必须包含：",
+        "   没有可信商业证据时写未发现足够商业化证据，不虚构报价或商业计划。",
+        "8. 紧接着输出“## 如果建议你落地：执行方案”。仅实际建议落地时包含：",
         "   推荐结论（立即做/先验证/暂不建议）、适合你的原因、首个可售卖形态、",
         "   目标客户、获客入口、待验证价格、7 天行动、30 天路线图、",
         "   继续、调整和停止标准，以及当前不要做什么。",
+        "   明确首个交付物、拟定时间/成本上限与可测量的成功证据。",
         "   只使用对话和本地上下文中已知的用户信息，不虚构能力、资源或预算。",
         "9. 最后输出“## 抓取覆盖和局限”，",
         f"   明确说明已抓取 {summary.replies_fetched} 条评论；",
@@ -287,6 +314,8 @@ def _render_analysis_prompt(
         "    遵循 Skill 的 opportunities schema；",
         f"    必须原样保留 analysis_input_hash `{_opportunities_hash(opportunities_path)}`；",
         "    只使用报告中实际出现的机会和已保存数据中的证据。",
+        "    仅摘要或无机会时 opportunities 为空，recommended_execution 为 null。",
+        "    所需方法审查受阻时保留 awaiting_analysis，不得标为 analyzed。",
         "",
     ]
     return "\n".join(lines)

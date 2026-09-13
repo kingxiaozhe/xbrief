@@ -34,8 +34,13 @@ def run_doctor(settings: Settings) -> dict[str, object]:
         checks.append(
             _check(
                 "readonly_tools",
-                {"get_tweet", "get_tweet_replies"}.issubset(tools),
-                "get_tweet + get_tweet_replies",
+                {
+                    "get_tweet",
+                    "get_tweet_replies",
+                    "get_article_preview",
+                    "get_article",
+                }.issubset(tools),
+                "get_tweet + get_tweet_replies + get_article_preview + get_article",
             )
         )
 

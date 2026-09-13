@@ -49,7 +49,14 @@ def configure(
 
 @app.command()
 def doctor(json_output: bool = typer.Option(False, "--json", help="输出 JSON。")) -> None:
-    result = run_doctor(load_settings())
+    try:
+        settings = load_settings()
+    except XBriefError as exc:
+        payload = {"ok": False, "error_code": exc.code, "message": exc.message}
+        typer.echo(json.dumps(payload, ensure_ascii=False) if json_output else exc.message)
+        raise typer.Exit(exit_code_for(exc)) from exc
+
+    result = run_doctor(settings)
     if json_output:
         typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
     else:

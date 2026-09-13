@@ -49,6 +49,10 @@ def prepare(
             "replies_fetched": len(replies),
             "top_level_replies_fetched": sum(reply.depth == 1 for reply in replies),
             "nested_replies_fetched": sum(reply.depth > 1 for reply in replies),
+            "warnings": [
+                *summary.warnings,
+                *([post.article_warning] if post.article_warning else []),
+            ],
         }
     )
     storage.finish_run(summary)

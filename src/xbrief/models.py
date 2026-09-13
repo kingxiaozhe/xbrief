@@ -29,6 +29,18 @@ class StopReason(StrEnum):
     INVALID_URL = "invalid_url"
 
 
+class XArticle(BaseModel):
+    id: str
+    source_url: str
+    title: str
+    preview_text: str = ""
+    plain_text: str
+    cover_image: str | None = None
+    media_urls: list[str] = Field(default_factory=list)
+    lifecycle_state: dict[str, Any] | None = None
+    source: str = "twikit"
+
+
 class Post(BaseModel):
     id: str
     canonical_url: str
@@ -42,6 +54,8 @@ class Post(BaseModel):
     quoted_id: str | None = None
     quoted_author: str | None = None
     quoted_text: str | None = None
+    article: XArticle | None = None
+    article_warning: str | None = None
     source: str = "twikit"
     fetched_at: datetime = Field(default_factory=utc_now)
 

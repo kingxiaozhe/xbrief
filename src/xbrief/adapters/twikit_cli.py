@@ -2,19 +2,23 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
 
 from xbrief.errors import XBriefError
-from xbrief.models import Post, ReplyPage
+from xbrief.models import Post, ReplyPage, XArticle
 from xbrief.redaction import redact
 from xbrief.security import cookie_file_safety
 from xbrief.url import ParsedTweetUrl
 
-ALLOWED_TOOLS = frozenset({"get_tweet", "get_tweet_replies"})
+ALLOWED_TOOLS = frozenset(
+    {"get_tweet", "get_tweet_replies", "get_article_preview", "get_article"}
+)
 EXPECTED_TWIKIT_VERSION = "0.1.35"
+TCO_URL_RE = re.compile(r"https://t\.co/[A-Za-z0-9]+")
 
 
 class TwikitCliAdapter:
@@ -90,6 +94,11 @@ class TwikitCliAdapter:
     @staticmethod
     def _classify_error(message: str) -> XBriefError:
         lowered = message.lower()
+        if any(
+            term in lowered
+            for term in ("does not embed an article", "quote tweet, not an article")
+        ):
+            return XBriefError("not_article", "检测到短链接，但它不是可读取的 X Article。")
         if any(term in lowered for term in ("401", "unauthorized", "cookie", "auth")):
             return XBriefError("auth_failed", "X Cookie 无效或已经过期。")
         if any(term in lowered for term in ("not found", "404", "deleted")):
@@ -103,7 +112,7 @@ class TwikitCliAdapter:
     def fetch_post(self, parsed: ParsedTweetUrl) -> Post:
         data = self._call("get_tweet", tweet_id=parsed.tweet_id)
         try:
-            return Post(
+            post = Post(
                 id=str(data["id"]),
                 canonical_url=parsed.canonical_url,
                 conversation_id=_optional_str(data.get("conversation_id")),
@@ -119,6 +128,67 @@ class TwikitCliAdapter:
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise XBriefError("backend_error", "原帖返回格式与固定契约不一致。") from exc
+        return self._with_article(post)
+
+    def _with_article(self, post: Post) -> Post:
+        if not TCO_URL_RE.search(post.text):
+            return post
+        try:
+            preview = self._call("get_article_preview", tweet_id=post.id)
+        except XBriefError as exc:
+            if exc.code == "not_article":
+                return post.model_copy(update={"article_warning": exc.message})
+            return post.model_copy(
+                update={"article_warning": f"X Article 预览读取失败：{exc.message}"}
+            )
+
+        article_id = _optional_str(preview.get("rest_id"))
+        if not article_id:
+            return post.model_copy(
+                update={"article_warning": "X Article 预览缺少 rest_id，已保留普通推文。"}
+            )
+        try:
+            data = self._call("get_article", article_id=article_id, format="plain")
+        except XBriefError as exc:
+            return post.model_copy(
+                update={"article_warning": f"X Article 正文读取失败：{exc.message}"}
+            )
+
+        try:
+            article = XArticle(
+                id=str(data["rest_id"]),
+                source_url=f"https://x.com/i/article/{data['rest_id']}",
+                title=str(data.get("title") or preview.get("title") or "未命名 X Article"),
+                preview_text=str(
+                    data.get("preview_text") or preview.get("preview_text") or ""
+                ),
+                plain_text=str(data["plain_text"]),
+                cover_image=_optional_str(
+                    data.get("cover_image") or preview.get("cover_image")
+                ),
+                media_urls=[str(item) for item in data.get("media") or [] if item],
+                lifecycle_state=(
+                    data.get("lifecycle_state")
+                    if isinstance(data.get("lifecycle_state"), dict)
+                    else None
+                ),
+            )
+        except (KeyError, TypeError, ValueError):
+            return post.model_copy(
+                update={
+                    "article_warning": "X Article 返回格式与固定契约不一致，已保留普通推文。"
+                }
+            )
+        article_warning = None
+        if not article.plain_text.strip():
+            article_warning = "X Article 正文为空；已保留标题和媒体元数据。"
+        elif article.plain_text.rstrip().endswith((":", "：")):
+            article_warning = (
+                "X Article 正文以冒号结尾；上游可能未返回后续富文本或代码块，请核对页面。"
+            )
+        return post.model_copy(
+            update={"article": article, "article_warning": article_warning}
+        )
 
     def fetch_replies(self, parent_id: str, cursor: str | None = None) -> ReplyPage:
         data = self._call("get_tweet_replies", tweet_id=parent_id, cursor=cursor)
