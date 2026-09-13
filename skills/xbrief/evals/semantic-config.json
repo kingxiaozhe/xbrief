@@ -1,19 +1,22 @@
 {
   "positive_concepts": {
     "x_status": {
-      "phrases": ["x status", "twitter status", "x 帖子", "x.com", "twitter"],
-      "weight": 0.4
+      "phrases": ["x status", "twitter status", "x 帖子", "x.com", "twitter", "右侧帖子", "xbrief"],
+      "weight": 0.6
     },
     "archive": {
       "phrases": ["archive", "save to obsidian", "存档", "保存到 obsidian", "保存到 Obsidian"],
-      "weight": 0.3
+      "weight": 0.2
     },
     "replies": {
       "phrases": ["replies", "comments", "回复", "评论", "讨论"],
-      "weight": 0.3
+      "weight": 0.2
     }
   },
   "negative_concepts": {
+    "skill_edit": {"phrases": ["触发规则", "更新 skill", "skill editing"], "weight": 0.7, "exclusive": true},
+    "publish": {"phrases": ["转发", "发布帖子", "publish"], "weight": 0.7, "exclusive": true},
+    "profile_scan": {"phrases": ["全部历史推文", "profile scan"], "weight": 0.7, "exclusive": true},
     "translation": {
       "phrases": ["translate", "翻译"],
       "weight": 0.55,

@@ -91,7 +91,9 @@ The expert panel is a method audit, not roleplay. Do not write as Feynman, Paul 
 
 Use `评论区共识` only when stance coverage or counts support it. Otherwise write `入选评论中的重复主题` and state the sampling limit.
 
-For the 3–6 selected core comments, verbatim text is required because the reader asked to see the evidence. Quote only the relevant saved comment, preserve its wording, and link its X source. Do not reproduce the full discussion or quote comments merely because they have high engagement.
+Aim for 3–6 selected core comments only when that many are material. With fewer, quote only those available; with zero, state the evidence gap. Exact excerpts are required: preserve wording and link the X source. Do not reproduce the full discussion or quote comments merely because they have high engagement.
+
+When no credible commercial opportunity is supported, retain the report headings but write 未发现足够商业化证据 and a short explanation. Keep `opportunities` empty and `recommended_execution` null in the matching JSON. Do not fabricate an offer, price, or 30-day plan to fill the template. A personal-use experiment can be recommended without presenting it as a business. For an actual execution recommendation, include the first deliverable, proposed time/cost cap, measurable success evidence and continue/adjust/stop criteria.
 
 Evidence grades:
 
@@ -101,3 +103,7 @@ Evidence grades:
 - E3: explicit current spend, quantified loss, recurring costly workaround, migration, or vendor-directed price request/purchase intent; a generic question or request for free advice is not E3
 - E4: recurrence across platforms or time
 - E5: interview, preorder, paid pilot, or verified revenue
+
+## Depth independent of persistence
+
+For a requested basic summary, retain headings for compatibility but mark expert/business/plan sections 不适用（本次仅摘要）. `opportunities` stays empty and `recommended_execution` null. For business decisions or explicit method review, retain the full evidence-first panel requirements. If the required panel is unavailable, label 未完成方法审查 and keep the requested full analysis incomplete; never fabricate a panel result to complete the template.

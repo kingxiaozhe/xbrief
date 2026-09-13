@@ -1,5 +1,8 @@
 {
   "should_trigger": [
+    {"text": "看看右侧帖子，你觉得有没有可用的地方。", "family": "current-tab-read"},
+    {"text": "用 $xbrief 分析 https://x.com/alice/status/123，不保存。", "family": "explicit-read"},
+    {"text": "总结这个 X 帖子，只有一条有用评论也可以。", "family": "sparse-comments"},
     {
       "text": "用 $xbrief 抓取这个 X 帖子和评论，保存到 Obsidian 后分析。",
       "family": "explicit-command"
@@ -14,6 +17,8 @@
     }
   ],
   "should_not_trigger": [
+    {"text": "更新 xbrief Skill 的触发规则。", "family": "skill-edit"},
+    {"text": "帮我转发这个 X 帖子。", "family": "publish"},
     {
       "text": "把这段中文翻译成英文。",
       "family": "translation"

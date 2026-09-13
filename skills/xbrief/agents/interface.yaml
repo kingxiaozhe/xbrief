@@ -1,7 +1,7 @@
 interface:
   display_name: XBrief
-  short_description: Archive one X discussion and produce an evidence-bounded analysis.
-  default_prompt: Use $xbrief to archive and analyze this X status URL in my configured Obsidian Vault.
+  short_description: Read-only X analysis; archive only on explicit request.
+  default_prompt: "Use $xbrief: match analysis depth to my request; save only on explicit request."
 
 compatibility:
   canonical_format: agent-skills
@@ -19,5 +19,5 @@ compatibility:
     remote_inline_execution: forbid
     remote_metadata_policy: allow-metadata-only
   degradation:
-    openai: Preserve the capture and report unavailable local dependencies before analysis.
-    generic: Use SKILL.md with the local xbrief CLI; do not emulate unavailable capture results.
+    openai: Preserve existing captures; report unavailable dependencies without switching modes or inventing evidence.
+    generic: READ requires the Codex built-in browser; ARCHIVE uses the local CLI only with explicit save intent. Report unavailable dependencies.
